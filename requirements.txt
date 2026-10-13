@@ -1,0 +1,14 @@
+# Dependencias del proyecto (Python 3.10).
+#
+# IMPORTANTE: PyTorch y torchvision NO van aquí.
+# Se instalan antes, con la rueda de CUDA correspondiente a la GPU
+# (ver los comandos de la Fase 0). Si se instalaran desde este archivo,
+# pip traería la versión de solo CPU.
+ultralytics
+pycocotools
+opencv-python
+pandas
+scipy
+matplotlib
+pyyaml
+thop

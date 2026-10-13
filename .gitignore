@@ -1,0 +1,32 @@
+# --- Datos y salidas pesadas: no van a git ---
+# Se ignora el contenido de data/ y runs/, pero se conservan las carpetas
+# gracias a los archivos .gitkeep (así el laboratorio clona la misma estructura).
+data/**
+!data/**/
+!data/**/.gitkeep
+
+runs/**
+!runs/**/
+!runs/**/.gitkeep
+
+# Pesos de modelos (yolov8s.pt, best.pt, last.pt, ...)
+*.pt
+*.pth
+*.onnx
+*.engine
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+.venv/
+venv/
+env/
+
+# --- Sistema y editores ---
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/

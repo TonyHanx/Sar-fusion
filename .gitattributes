@@ -1,0 +1,7 @@
+# Normaliza los finales de linea: en el repositorio se guardan como LF,
+# para que el codigo sea identico en Windows y en el laboratorio con Linux.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.JPG binary
+*.pt binary
