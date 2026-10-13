@@ -15,7 +15,7 @@ Esta investigación estudia **cómo combinar las dos cámaras** para encontrar a
 
 Así se ve una imagen térmica desde un dron a 31 metros. Las tres manchas claras marcadas en verde son personas tendidas entre la vegetación: el calor del cuerpo las delata aunque a simple vista no se distingan.
 
----y s
+---y 
 
 ## 2. Qué hace este código
 
@@ -204,7 +204,47 @@ Encontrar esto a tiempo evitó construir todo el estudio sobre un dato que no ex
 
 ---
 
-## 8. Glosario
+## 8. Las herramientas que se usan y por qué
+
+Nada de esto se programó desde cero. El proyecto usa programas ya existentes, cada uno para una tarea distinta. La idea es la misma que al construir una casa: uno no fabrica los ladrillos.
+
+### Las dos piezas centrales
+
+| Herramienta | Qué hace | Por qué se eligió |
+|---|---|---|
+| **PyTorch** 2.14.1 | Es el motor de cálculo donde vive y aprende la red neuronal. Todo lo demás se apoya en él. | Es el estándar en investigación de inteligencia artificial, y es lo que usa por dentro el detector que elegimos. Se instala en su versión para tarjeta gráfica (CUDA 12.6), que hace los cálculos decenas de veces más rápido que el procesador. |
+| **Ultralytics** 8.4.176 | Trae el detector YOLOv8 ya construido: lo entrena, lo mide y guarda las curvas de aprendizaje. Es lo que se ejecuta en `train.py`. | Es la implementación oficial de YOLOv8, y es la misma que usaron los autores del dataset POP. Usar la misma herramienta es lo que permite comparar nuestro resultado con el 0.87 que ellos publicaron. Sin esto habría que programar una red neuronal entera. |
+
+### Para medir los resultados
+
+| Herramienta | Qué hace | Por qué se eligió |
+|---|---|---|
+| **pycocotools** 2.0.11 | Califica al detector: compara lo que encontró con lo que había y calcula la nota (mAP). Se usa en `eval_estratos.py`. | Es la herramienta con la que se califican los detectores en los artículos científicos, así que nuestra nota es comparable con la de cualquier otro trabajo. Además permite marcar personas como "ignorar", que es justo lo que hace falta para medir por separado cada nivel de oclusión. |
+
+### Para manejar imágenes, tablas y archivos
+
+| Herramienta | Qué hace | Dónde se usa |
+|---|---|---|
+| **OpenCV** 5.0.0.93 | Abre las fotos, dibuja los rectángulos y los textos encima, y las vuelve a guardar. | En todas las figuras de este README. En la fase 5 se usará además para encajar la foto normal sobre la térmica. |
+| **NumPy** 2.4.6 | Trabaja con listas de números grandes y rápidas. Una foto, para la computadora, es exactamente eso: una tabla de números. | Es la base sobre la que están construidos OpenCV y PyTorch; nosotros la usamos directamente para las siluetas. |
+| **pandas** 3.0.6 | Maneja tablas, como una hoja de cálculo pero escrita en código. | Para armar `personas.csv` (26 810 filas) y las tablas de `reports/`. |
+| **matplotlib** 3.11.2 | Dibuja gráficos. | La figura de distribuciones de la sección 5.2. |
+| **PyYAML** 6.0.3 | Lee los archivos de la carpeta `configs/`. | En todos los scripts. El formato YAML se eligió porque se lee como texto normal: cualquiera puede abrir un experimento y entender sus ajustes sin saber programar. |
+
+### Dos que están instaladas pero todavía no usamos directamente
+
+Por honestidad, conviene decirlo:
+
+- **SciPy** 1.17.1 — herramientas de matemática científica. No aparece en nuestro código: la necesita Ultralytics por dentro. Está en la lista para dejar fijada su versión y que el laboratorio instale exactamente la misma.
+- **thop** 0.1.1 — cuenta cuántas operaciones hace un modelo para procesar una imagen. Se usará en la fase final, donde hay que comparar no solo qué tan bien detecta cada uno de los cinco modelos, sino cuánto cuesta ejecutarlo.
+
+### Por qué PyTorch no está en `requirements.txt`
+
+Es el único programa que se instala aparte, y por un motivo concreto: si estuviera en esa lista, el instalador bajaría la versión que **solo usa el procesador**, y la tarjeta gráfica quedaría sin aprovechar. Hay que pedirlo explícitamente en su versión con CUDA, como se ve en la sección 10.
+
+---
+
+## 9. Glosario
 
 | Término | Explicación |
 |---|---|
@@ -237,12 +277,28 @@ Encontrar esto a tiempo evitó construir todo el estudio sobre un dato que no ex
 
 ---
 
-## 9. Cómo repetirlo
+## 10. Cómo repetirlo
 
 **Los datos** (no se incluyen en el repositorio, hay que descargarlos):
 
 - POP, el dataset térmico que se usa en este avance: [osf.io/kmcva](https://osf.io/kmcva) — 613 MB. Va en `data/raw/pop`.
 - WiSARD, el dataset con cámara normal y térmica emparejadas, para las siguientes fases: [sites.google.com/uw.edu/wisard](https://sites.google.com/uw.edu/wisard) — 40.5 GB el archivo completo, o 972 MB la muestra de un solo vuelo. Va en `data/raw/wisard`.
+
+**La instalación**, una sola vez por computadora:
+
+```bash
+# Un entorno aislado, para que las versiones de este proyecto no choquen con
+# las de otros trabajos de la misma máquina.
+conda create -n sar python=3.11 -y
+conda activate sar
+
+# PyTorch con soporte de tarjeta gráfica. Va aparte y con esta dirección
+# expresa; desde el instalador normal vendría la versión lenta, solo procesador.
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu126
+
+# El resto de las herramientas de la sección 8.
+pip install -r requirements.txt
+```
 
 **Los comandos**, en orden:
 

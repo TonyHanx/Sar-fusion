@@ -1,14 +1,42 @@
-# Dependencias del proyecto (Python 3.10).
+# Herramientas que necesita el proyecto. Se instalan con:
+#     pip install -r requirements.txt
 #
-# IMPORTANTE: PyTorch y torchvision NO van aquí.
-# Se instalan antes, con la rueda de CUDA correspondiente a la GPU
-# (ver los comandos de la Fase 0). Si se instalaran desde este archivo,
-# pip traería la versión de solo CPU.
+# En el README, seccion 8, esta explicado para que sirve cada una.
+#
+# IMPORTANTE: PyTorch y torchvision NO van en esta lista, aunque son las piezas
+# centrales. Si estuvieran aqui, el instalador bajaria la version que solo usa
+# el procesador y la tarjeta grafica quedaria sin aprovechar. Se instalan antes,
+# pidiendo expresamente la version con CUDA:
+#     pip install torch torchvision --index-url https://download.pytorch.org/whl/cu126
+
+# El detector YOLOv8 ya construido: lo entrena, lo mide y guarda las curvas.
+# Es la misma herramienta que usaron los autores del dataset POP, asi que
+# nuestros resultados son comparables con los suyos.
 ultralytics
+
+# Califica al detector con la metrica mAP, que es la que se usa en los
+# articulos cientificos. Permite ademas marcar personas como "ignorar", que es
+# lo que hace falta para medir por separado cada nivel de oclusion.
 pycocotools
+
+# Abre las fotos, dibuja los rectangulos y los textos, y las vuelve a guardar.
+# Mas adelante servira para encajar la foto normal sobre la termica.
 opencv-python
+
+# Tablas, como una hoja de calculo pero en codigo: personas.csv y los reports/.
 pandas
+
+# Matematica cientifica. No aparece en nuestro codigo: la necesita Ultralytics
+# por dentro. Se deja listada para fijar la version en todas las maquinas.
 scipy
+
+# Los graficos de reports/.
 matplotlib
+
+# Lee los archivos de configs/, donde viven los ajustes de cada experimento.
 pyyaml
+
+# Cuenta cuantas operaciones hace un modelo para procesar una imagen. Todavia
+# no se usa: es para la fase final, donde hay que comparar cuanto cuesta
+# ejecutar cada uno de los cinco modelos.
 thop
