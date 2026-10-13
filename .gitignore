@@ -31,8 +31,8 @@ desktop.ini
 .vscode/
 .idea/
 
-# Muestras visuales generadas a partir de los datasets. No van a git: se
-# regeneran con semilla 0 y no nos corresponde redistribuir imagenes de POP
-# ni de WiSARD (ademas el repositorio esta publico por ahora).
-reports/pop_muestras/
+# Las figuras de reports/ SI se versionan: son las de la exposicion y el
+# articulo, y POP se publica con licencia CC-BY 4.0, que permite
+# redistribuirlas citando la fuente (ver el README).
+# Las superposiciones de WiSARD quedan fuera hasta confirmar su licencia.
 reports/registro/

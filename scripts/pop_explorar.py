@@ -30,12 +30,8 @@ import yaml
 RAIZ_REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RAIZ_REPO))
 
-from src.datos import pop  # noqa: E402  (se importa despues de ajustar sys.path)
-
-VERDE = (0, 255, 0)
-ROJO = (0, 0, 255)
-BLANCO = (255, 255, 255)
-NEGRO = (0, 0, 0)
+from src import visual  # noqa: E402  (se importan despues de ajustar sys.path)
+from src.datos import pop  # noqa: E402
 
 
 def leer_config(ruta: Path) -> dict:
@@ -72,15 +68,6 @@ def resumir_particion(particion: str, datos: dict) -> dict:
     return {"imagenes": len(imagenes), "cajas": n_cajas, "mascaras": con_mascara}
 
 
-def texto_con_fondo(imagen, texto: str, origen: tuple[int, int]) -> None:
-    """Escribe texto blanco sobre una banda negra, para que se lea sobre la imagen."""
-    escala, grosor = 0.7, 2
-    (ancho_texto, alto_texto), base = cv2.getTextSize(texto, cv2.FONT_HERSHEY_SIMPLEX, escala, grosor)
-    x, y = origen
-    cv2.rectangle(imagen, (x - 4, y - alto_texto - 6), (x + ancho_texto + 4, y + base), NEGRO, -1)
-    cv2.putText(imagen, texto, (x, y), cv2.FONT_HERSHEY_SIMPLEX, escala, BLANCO, grosor, cv2.LINE_AA)
-
-
 def dibujar(ruta_imagen: Path, anotaciones: list[dict], particion: str, grosor: int):
     """Dibuja las cajas (y las mascaras si existen) sobre una copia de la imagen."""
     imagen = cv2.imread(str(ruta_imagen))
@@ -95,18 +82,18 @@ def dibujar(ruta_imagen: Path, anotaciones: list[dict], particion: str, grosor: 
             n_mascaras += 1
             # La mascara se pinta como una capa roja semitransparente.
             capa = imagen.copy()
-            capa[mascara > 0] = ROJO
+            capa[mascara > 0] = visual.ROJO
             imagen = cv2.addWeighted(capa, 0.45, imagen, 0.55, 0)
 
         x, y, w, h = (int(v) for v in anotacion["bbox"])
-        cv2.rectangle(imagen, (x, y), (x + w, y + h), VERDE, grosor)
+        visual.dibujar_caja(imagen, x, y, x + w, y + h, visual.VERDE, grosor)
 
     altitud = pop.altitud_desde_nombre(ruta_imagen.name)
     encabezado = (
         f"{particion} | {ruta_imagen.name} | {len(anotaciones)} personas | "
         f"{altitud:.1f} m ({pop.grupo_altitud(altitud)})"
     )
-    texto_con_fondo(imagen, encabezado, (12, 34))
+    visual.texto_con_fondo(imagen, encabezado, (12, 34))
     return imagen, n_mascaras
 
 

@@ -1,0 +1,32 @@
+# Configuracion de scripts/pop_predicciones.py (figuras de prediccion).
+# Las rutas son relativas a la raiz del repositorio.
+
+# Modelo a usar. OJO: por ahora apunta al diagnostico de 5 epocas con el 10% de
+# los datos, que NO es el resultado final. Cuando termine la corrida del
+# laboratorio, cambiar por runs/pop/exp1_pop_termico/weights/best.pt.
+pesos: runs/pop/exp1_prueba_aprendizaje/weights/best.pt
+etiqueta_modelo: diagnostico de 5 epocas con el 10% de los datos
+
+raiz_pop: data/raw/pop/POP
+particion: test
+
+# Curvas de entrenamiento que genera Ultralytics: se copian a reports/ porque
+# la carpeta runs/ no se sube a git.
+curvas_origen: runs/pop/exp1_prueba_aprendizaje/results.png
+curvas_destino: reports/exp1_prueba_5epocas_curvas.png
+
+salida: reports/predicciones
+
+# Cuantas imagenes se analizan para elegir los ejemplos, y cuantos ejemplos de
+# cada tipo se guardan.
+candidatas: 200
+n_aciertos: 3
+n_fallos: 3
+
+# Deteccion.
+confianza: 0.25      # confianza minima para mostrar una deteccion
+iou: 0.5             # solape minimo para dar una deteccion por correcta
+imgsz: 1280          # misma resolucion con la que se entreno
+
+semilla: 0
+calidad_jpg: 85      # las figuras deben pesar poco para que entren en el repositorio
