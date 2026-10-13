@@ -1,0 +1,34 @@
+# Prueba corta en la PC personal (RTX 3050 de 6 GB): solo comprueba que el
+# flujo completo corre de principio a fin. No produce resultados para el articulo.
+# Diferencias con la corrida completa: 10% de los datos, 1 epoca y lote 4.
+
+experimento: exp1_pop_termico_prueba
+descripcion: Prueba de humo del flujo de entrenamiento en la PC.
+modelo: yolov8s.pt
+bitacora: experiments/bitacora.csv
+notas: prueba corta en la PC, no reportable
+
+ultralytics:
+  data: configs/pop.yaml
+  epochs: 1
+  batch: 4
+  fraction: 0.1         # 10% de las imagenes de entrenamiento
+  imgsz: 1280
+  optimizer: SGD
+  lr0: 0.001
+  # Ultralytics calienta la tasa de aprendizaje durante 3 epocas. Con 1 sola
+  # epoca, la corrida entera seria calentamiento y las perdidas no se moverian,
+  # asi que la prueba no demostraria nada. Se acorta el calentamiento SOLO aqui;
+  # la corrida completa del laboratorio conserva el valor por omision.
+  warmup_epochs: 0.5
+  seed: 0
+  deterministic: true
+  project: runs/pop
+  name: exp1_prueba
+  device: 0
+  workers: 2
+  val: true
+  plots: true
+  fliplr: 0.5
+  mosaic: 1.0
+  scale: 0.5

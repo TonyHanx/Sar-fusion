@@ -1,0 +1,29 @@
+# Experimento 1: YOLOv8s termico en POP (corrida completa, laboratorio).
+# Reproduce el resultado publicado por Z. Song et al. (2025): mAP@0.5 = 0.87.
+
+experimento: exp1_pop_termico
+descripcion: YOLOv8s con pesos COCO sobre POP termico, particiones oficiales.
+modelo: yolov8s.pt
+bitacora: experiments/bitacora.csv
+notas: corrida completa para el articulo
+
+# Todo lo de aqui se le pasa tal cual a Ultralytics.
+ultralytics:
+  data: configs/pop.yaml
+  epochs: 100
+  batch: 16
+  imgsz: 1280
+  optimizer: SGD        # explicito: con "auto" Ultralytics ignora lr0
+  lr0: 0.001
+  seed: 0
+  deterministic: true
+  project: runs/pop
+  name: exp1_pop_termico
+  device: 0
+  workers: 8
+  val: true
+  plots: true
+  # Aumento de datos acordado: volteo, mosaico y cambio de escala.
+  fliplr: 0.5
+  mosaic: 1.0
+  scale: 0.5
