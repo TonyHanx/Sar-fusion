@@ -15,7 +15,7 @@ Esta investigación estudia **cómo combinar las dos cámaras** para encontrar a
 
 Así se ve una imagen térmica desde un dron a 31 metros. Las tres manchas claras marcadas en verde son personas tendidas entre la vegetación: el calor del cuerpo las delata aunque a simple vista no se distingan.
 
----y 
+---
 
 ## 2. Qué hace este código
 
