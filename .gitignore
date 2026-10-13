@@ -36,3 +36,7 @@ desktop.ini
 # redistribuirlas citando la fuente (ver el README).
 # Las superposiciones de WiSARD quedan fuera hasta confirmar su licencia.
 reports/registro/
+
+# Puntero local para que el asistente cargue REGLAS.md automaticamente.
+# No se versiona: el archivo real del proyecto es REGLAS.md.
+CLAUDE.md

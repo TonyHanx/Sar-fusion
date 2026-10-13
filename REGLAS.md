@@ -27,6 +27,8 @@ Soy estudiante y no domino PyTorch ni Ultralytics. En cada paso, primero dime pa
 - **Semilla 0 en todo.** Así los resultados se pueden repetir.
 - **Windows y Linux.** El código debe correr en mi PC con Windows y en el laboratorio con Linux. Usa `pathlib` para las rutas.
 - **Español.** Comentarios y mensajes en español.
+- **Commits limpios.** Los mensajes de commit no llevan líneas de atribución
+  del asistente ni coautores automáticos. Solo describen el cambio.
 
 ## Máquinas
 
@@ -38,8 +40,9 @@ Soy estudiante y no domino PyTorch ni Ultralytics. En cada paso, primero dime pa
 
 ```
 sar-fusion/
-  CLAUDE.md
+  REGLAS.md
   FASES.md
+  README.md
   requirements.txt
   configs/                yaml de datasets y de entrenamiento
   data/raw/pop/           original, no va a git

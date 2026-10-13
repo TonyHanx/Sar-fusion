@@ -1,6 +1,6 @@
 # Fases de la experimentación
 
-Cada fase tiene un mensaje para pegar en Claude Code y una lista de lo que debes revisar antes de pasar a la siguiente. No avances si la revisión no sale bien.
+Cada fase tiene un mensaje para pegar en el asistente y una lista de lo que debes revisar antes de pasar a la siguiente. No avances si la revisión no sale bien.
 
 ---
 
@@ -10,7 +10,7 @@ Cada fase tiene un mensaje para pegar en Claude Code y una lista de lo que debes
 
 **Mensaje:**
 
-> Lee CLAUDE.md. Vamos con la Fase 0:
+> Lee REGLAS.md. Vamos con la Fase 0:
 >
 > 1. Crea la estructura de carpetas del repositorio.
 > 2. Crea un `.gitignore` que excluya `data/`, `runs/` y los archivos `*.pt`.

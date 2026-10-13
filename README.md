@@ -15,7 +15,7 @@ Esta investigación estudia **cómo combinar las dos cámaras** para encontrar a
 
 Así se ve una imagen térmica desde un dron a 31 metros. Las tres manchas claras marcadas en verde son personas tendidas entre la vegetación: el calor del cuerpo las delata aunque a simple vista no se distingan.
 
----
+---y s
 
 ## 2. Qué hace este código
 
@@ -276,4 +276,4 @@ El dataset **WiSARD**, que se usará en las siguientes fases:
 
 > Broyles, D., Hayner, C. R., & Leung, K. (2022). WiSARD: A Labeled Visual and Thermal Image Dataset for Wilderness Search and Rescue. *IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)*. https://arxiv.org/abs/2309.04453
 
-El plan completo por fases está en [FASES.md](FASES.md) y las reglas de trabajo del proyecto en [CLAUDE.md](CLAUDE.md).
+El plan completo por fases está en [FASES.md](FASES.md) y las reglas de trabajo del proyecto en [REGLAS.md](REGLAS.md).
