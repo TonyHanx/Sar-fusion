@@ -1,0 +1,16 @@
+# Configuracion de scripts/pop_explorar.py (Fase 1: inspeccion visual de POP).
+# Las rutas son relativas a la raiz del repositorio.
+
+# Dataset oficial: la carpeta que contiene train/, val/ y test/.
+raiz_pop: data/raw/pop/POP
+particiones: [train, val, test]
+
+# Donde se guardan las imagenes con las cajas dibujadas.
+salida: reports/pop_muestras
+
+# Cuantas imagenes al azar se dibujan y con que semilla se eligen.
+n_muestras: 10
+semilla: 0
+
+# Dibujo.
+grosor_caja: 2

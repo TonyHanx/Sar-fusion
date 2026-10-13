@@ -30,3 +30,9 @@ Thumbs.db
 desktop.ini
 .vscode/
 .idea/
+
+# Muestras visuales generadas a partir de los datasets. No van a git: se
+# regeneran con semilla 0 y no nos corresponde redistribuir imagenes de POP
+# ni de WiSARD (ademas el repositorio esta publico por ahora).
+reports/pop_muestras/
+reports/registro/
