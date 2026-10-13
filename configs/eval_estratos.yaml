@@ -1,0 +1,32 @@
+# Configuracion de scripts/eval_estratos.py (Fase 3b).
+# Las rutas son relativas a la raiz del repositorio.
+
+experimento: exp1_pop_termico_prueba
+notas: evaluacion del diagnostico de 5 epocas, no reportable
+
+# Modelo a evaluar. Cambiar por runs/pop/exp1_pop_termico/weights/best.pt
+# cuando termine la corrida del laboratorio.
+pesos: runs/pop/exp1_prueba_aprendizaje/weights/best.pt
+
+raiz_pop: data/raw/pop/POP
+particion: test
+tabla_personas: data/processed/pop/personas.csv   # de aqui salen los estratos de oclusion
+
+# Salidas.
+salida_resultados: reports/exp1_resultados.csv
+salida_predicciones: runs/eval/exp1_prueba/predicciones.json   # runs/ no se versiona
+bitacora: experiments/bitacora.csv
+
+# Deteccion y metricas.
+confianza_prediccion: 0.001   # baja a proposito: el mAP necesita la curva completa
+confianza_metricas: 0.5       # umbral al que se reportan precision y recall
+iou: 0.5
+imgsz: 1280                   # la misma resolucion con la que se entreno
+max_det: 300
+lote: 8
+
+# Control: ademas del calculo propio con pycocotools, se pide a Ultralytics su
+# mAP@0.5 global. Sirve para comparar con el 0.87 publicado y para verificar
+# que las dos implementaciones coinciden.
+control_ultralytics: true
+datos_ultralytics: configs/pop.yaml

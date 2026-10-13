@@ -14,7 +14,7 @@ Esta etapa es una prueba de concepto: comprobar que el flujo completo funciona y
 | 1 | Conocer POP | Terminada |
 | 2 | POP en formato YOLO y conteos | Terminada |
 | 3a | Entrenador, bitácora y prueba en PC | Terminada |
-| 3b | Evaluación por estrato | Pendiente |
+| 3b | Evaluación por estrato | Terminada |
 | 4–10 | WiSARD, registro y las tres fusiones | Pendientes |
 
 ---
@@ -73,6 +73,23 @@ En las siguientes figuras, **verde = persona real** y **rojo = detección del mo
 *A 70 metros se le pasa una de las dos personas y produce cinco detecciones falsas: cuanto más alto vuela el dron, más difícil se vuelve todo.*
 
 Los seis ejemplos están en [`reports/predicciones/`](reports/predicciones).
+
+## 5. Resultados por altitud
+
+Evaluación sobre las 900 imágenes de prueba, con `pycocotools`. La precisión y el recall se miden con umbral de confianza 0.5; el mAP@0.5 usa todas las detecciones.
+
+| Estrato | Imágenes | Personas | mAP@0.5 | Precisión | Recall |
+|---|---|---|---|---|---|
+| **Global** | 900 | 1840 | **0.600** | 0.653 | 0.542 |
+| 30 m | 102 | 102 | 0.745 | 0.305 | 0.873 |
+| 50 m | 731 | 1604 | 0.618 | 0.731 | 0.536 |
+| 70 m | 67 | 134 | 0.530 | 0.807 | 0.373 |
+
+*El mAP@0.5 cae de 0.745 a 0.530 conforme el dron sube: cuanto más alto vuela, más difícil es detectar. El cambio de precisión y recall dice algo más fino: a 30 m el modelo encuentra casi a todos (recall 0.873) pero se confunde mucho con vegetación caliente (precisión 0.305), mientras que a 70 m solo se atreve con lo más evidente (precisión 0.807, recall 0.373).*
+
+Como control de que el cálculo propio es correcto, Ultralytics evaluó el mismo modelo por su cuenta y obtuvo **mAP@0.5 = 0.599** frente al **0.5997** calculado aquí: una diferencia de 0.0007. Los números completos están en [`reports/exp1_resultados.csv`](reports/exp1_resultados.csv).
+
+> Otra vez: estos resultados son del diagnóstico de 5 épocas con el 10 % de los datos. Sirven para comprobar que la medición funciona, no como resultado final. Los estratos de 30 m y 70 m además tienen pocas personas (102 y 134), así que sus valores son inestables.
 
 ---
 
