@@ -1,23 +1,35 @@
-"""Prepara POP para Ultralytics y describe el dataset (Fase 2).
+"""
+pop_preparar.py
 
-Para que sirve:
-  1. Dejar POP en el formato que entiende Ultralytics (una carpeta de imagenes
-     y una de etiquetas .txt), respetando las particiones oficiales.
-  2. Construir una tabla con una fila por persona, para poder analizar despues
-     el desempeno por altitud (y por oclusion, cuando haya con que calcularla).
-  3. Generar la tabla resumen y la figura de distribuciones del articulo.
+¿Para qué sirve?
+    Deja el dataset POP listo para entrenar. Las marcas de las personas vienen
+    guardadas en un formato llamado COCO, pero el programa que entrena
+    (Ultralytics) solo entiende otro, llamado YOLO. Este script traduce de uno
+    al otro. De paso arma la lista de todas las personas del dataset, que es lo
+    que después permite comparar resultados por altura de vuelo.
 
-Que tecnica usa: la conversion de COCO a YOLO es la misma de los autores del
-dataset (src/coco2yolo.py publicado en OSF): la caja [x, y, ancho, alto] en
-pixeles pasa a centro y tamano relativos al tamano de la imagen, redondeados a
-6 decimales.
+¿Qué recibe?
+    Las fotos y las marcas originales, en data/raw/pop. No las modifica.
 
-Nota sobre la oclusion: POP no publica mascaras, asi que las columnas de
-oclusion y estrato quedan vacias. Ver el resumen de la Fase 1.
+¿Qué produce?
+    - data/processed/pop: las fotos con sus marcas traducidas al formato YOLO.
+    - personas.csv: una fila por persona, con su foto, el lugar y la altura a
+      la que volaba el dron.
+    - reports/tabla9_pop.csv: cuántas fotos y cuántas personas hay en cada
+      grupo y a cada altura.
+    - reports/pop_distribuciones.png: la misma información en dos gráficos.
+    - configs/pop.yaml: el archivo que le dice al programa de entrenamiento
+      dónde quedaron las fotos.
 
-Uso:
+¿Cómo se usa?
     python scripts/pop_preparar.py
     python scripts/pop_preparar.py --config configs/pop_preparar.yaml
+
+Dos aclaraciones importantes:
+    La traducción de las marcas usa la misma fórmula que publicaron los autores
+    del dataset, para que nuestros resultados se puedan comparar con los suyos.
+    Y las columnas de oclusión quedan vacías: POP no publica el dato de cuánto
+    tapa la vegetación a cada persona (ver el README).
 """
 
 from __future__ import annotations
@@ -53,11 +65,12 @@ def resolver(ruta: str | Path) -> Path:
 
 
 def enlazar_o_copiar(origen: Path, destino: Path, modo: str) -> None:
-    """Lleva una imagen a data/processed sin tocar el original.
+    """Lleva una foto a la carpeta de trabajo sin tocar la original.
 
-    Un enlace duro es un segundo nombre para el mismo archivo en el disco: no
-    gasta espacio y no modifica el original. Si no se puede (por ejemplo,
-    porque el destino esta en otro disco), se copia.
+    Las fotos de POP pesan 613 MB. Copiarlas gastaría ese espacio dos veces,
+    así que se usa un "enlace duro": un segundo nombre para el mismo archivo
+    del disco. Es como tener un atajo que pesa cero. Si el destino está en otro
+    disco no se puede, y entonces sí se copia.
     """
     if destino.exists():
         destino.unlink()
@@ -71,7 +84,17 @@ def enlazar_o_copiar(origen: Path, destino: Path, modo: str) -> None:
 
 
 def caja_a_yolo(bbox, ancho_img: int, alto_img: int):
-    """[x, y, ancho, alto] en pixeles -> centro y tamano relativos (formato YOLO)."""
+    """Traduce la marca de una persona del formato COCO al formato YOLO.
+
+    COCO guarda la esquina superior izquierda del rectángulo más su ancho y su
+    alto, contados en píxeles. YOLO guarda el centro del rectángulo y su tamaño,
+    pero como fracción de la foto: 0.5 significa "la mitad del ancho". Así la
+    marca sigue siendo válida aunque la foto se achique o se agrande.
+
+    Es la misma fórmula del script que publicaron los autores del dataset,
+    incluido el redondeo a seis decimales, para que los resultados se puedan
+    comparar con los suyos.
+    """
     x, y, w, h = bbox
     return (
         round((x + w / 2.0) / ancho_img, 6),
@@ -105,9 +128,14 @@ def preparar_particion(raiz_pop: Path, particion: str, salida: Path, modo: str, 
             modo,
         )
 
+        # Cada persona de la foto se traduce a una linea del archivo de marcas
+        # y a una fila de la tabla. El "0" del inicio de la linea es el numero
+        # de la clase: en este proyecto solo existe una, "persona".
         lineas = []
         for anotacion in datos["cajas"][id_imagen]:
             x, y, w, h = (int(v) for v in anotacion["bbox"])
+            # Hay una marca de 1x1 pixel en el dataset, claramente un error de
+            # quien anoto. Se descarta para que no ensucie el entrenamiento.
             if w < lado_minimo or h < lado_minimo:
                 descartadas += 1
                 continue
@@ -161,10 +189,14 @@ def escribir_config_ultralytics(ruta: Path, salida: Path) -> None:
 
 
 def figura_distribuciones(personas: pd.DataFrame, imagenes: pd.DataFrame, destino: Path) -> None:
-    """Dos histogramas: altitud de vuelo y tamano de las personas en pixeles.
+    """Dibuja los dos gráficos que describen el dataset.
 
-    Cada particion se dibuja como porcentaje de si misma, porque tienen tamanos
-    muy distintos y lo que interesa comparar es la forma, no la altura.
+    El de la izquierda muestra a qué alturas voló el dron. El de la derecha,
+    de qué tamaño se ven las personas en las fotos, medido en píxeles.
+
+    Los tres grupos se dibujan como porcentaje de sí mismos, no como cantidad,
+    porque tienen tamaños muy distintos: entrenamiento tiene 5548 fotos y
+    prueba solo 900. Así se pueden comparar las formas de las curvas.
     """
     figura, (izq, der) = plt.subplots(1, 2, figsize=(11, 4.2))
 
@@ -247,7 +279,8 @@ def main() -> int:
     personas.to_csv(ruta_personas, index=False, encoding="utf-8")
     print(f"\nTabla por persona  -> {ruta_personas}  ({len(personas)} filas)")
 
-    # Una fila por imagen, para contar imagenes sin repetirlas.
+    # La tabla de personas tiene varias filas por foto (una por persona). Para
+    # contar fotos hay que quedarse con una sola fila de cada una.
     imagenes = personas.drop_duplicates(subset=["particion", "imagen"])[
         ["particion", "imagen", "altitud_m", "grupo_altitud"]
     ]
@@ -263,8 +296,9 @@ def main() -> int:
         .rename("imagenes")
     )
     resumen = pd.concat([conteo_imagenes, conteo_personas], axis=1).reset_index()
-    # Columna explicita para que la tabla del articulo muestre por que todavia
-    # no hay estratos de oclusion.
+    # La tabla del articulo deberia separar tambien por cuanto tapa la
+    # vegetacion a cada persona. Esa columna se deja escrita, diciendo por que
+    # esta vacia, en vez de omitirla y que parezca un olvido.
     resumen["estrato_oclusion"] = "sin dato (POP no publica mascaras)"
 
     ruta_resumen = resolver(config["tabla_resumen"])
@@ -279,7 +313,9 @@ def main() -> int:
     escribir_config_ultralytics(resolver(config["config_ultralytics"]), salida)
     print(f"Config Ultralytics -> {resolver(config['config_ultralytics'])}")
 
-    # Verificacion: una etiqueta por imagen y una linea por persona.
+    # Comprobacion final, para no confiar a ciegas en la traduccion: tiene que
+    # haber un archivo de marcas por cada foto, y una linea por cada persona de
+    # la tabla. Si algo no cuadra, el script lo dice y termina con error.
     print("\n=== verificacion ===")
     todo_ok = True
     for particion in config["particiones"]:

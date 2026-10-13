@@ -1,25 +1,30 @@
-"""Figuras de prediccion sobre la particion de prueba de POP.
+"""
+pop_predicciones.py
 
-Para que sirve: mostrar, sin necesidad de ejecutar nada, que el detector
-encuentra personas y donde falla. Son las figuras de la exposicion y del
-articulo.
+¿Para qué sirve?
+    Mostrar con imágenes qué está haciendo el detector, sin que nadie tenga que
+    ejecutar nada. Una tabla de números dice cuánto acierta; estas figuras
+    dejan ver en qué acierta y en qué se equivoca, que es lo que se entiende
+    de un vistazo en una exposición.
 
-Que hace:
-  1. Corre el modelo sobre una muestra de la particion de prueba.
-  2. Empareja cada deteccion con una caja real por solape (IoU): con eso cada
-     imagen queda descrita por cuantas personas detecto, cuantas se le pasaron
-     y cuantas detecciones fueron falsas.
-  3. Guarda ejemplos de dos tipos, repartidos entre altitudes: imagenes donde
-     el modelo acerto del todo e imagenes donde fallo.
-  4. Copia a reports/ las curvas de entrenamiento de la corrida, porque la
-     carpeta runs/ no se versiona.
+¿Qué recibe?
+    Un modelo ya entrenado y las fotos del examen final.
 
-En las figuras: VERDE son las cajas reales (lo que hay) y ROJO las detecciones
-del modelo con su confianza.
+¿Qué produce?
+    - reports/predicciones: seis fotos marcadas. En verde las personas reales y
+      en rojo lo que el modelo creyó ver, con su nivel de confianza. Una "X"
+      señala una falsa alarma. Tres son casos donde acertó del todo y tres son
+      casos donde falló, a propósito: un informe honesto muestra las dos caras.
+    - Una copia de las curvas de entrenamiento en reports/, porque la carpeta
+      donde las guarda el entrenamiento no se sube al repositorio.
 
-Uso:
+¿Cómo se usa?
     python scripts/pop_predicciones.py
     python scripts/pop_predicciones.py --config configs/pop_predicciones.yaml
+
+Las imágenes se eligen solas: el script revisa 200 fotos, cuenta en cada una
+cuántas personas encontró y cuántas se le pasaron, y se queda con ejemplos de
+distintas alturas de vuelo.
 """
 
 from __future__ import annotations
@@ -50,7 +55,14 @@ def resolver(ruta) -> Path:
 
 
 def iou(caja_a, caja_b) -> float:
-    """Solape entre dos cajas en formato (x1, y1, x2, y2)."""
+    """Mide cuánto se superponen dos rectángulos, de 0 a 1.
+
+    Es la forma estándar de decidir si una detección "le atinó" a una persona.
+    Se divide la parte común entre los dos rectángulos por la superficie total
+    que ocupan juntos: 1 significa que coinciden exactamente y 0 que no se
+    tocan. En este proyecto se considera acierto a partir de 0.5, es decir,
+    cuando coinciden al menos a la mitad.
+    """
     ax1, ay1, ax2, ay2 = caja_a
     bx1, by1, bx2, by2 = caja_b
     ix1, iy1 = max(ax1, bx1), max(ay1, by1)
@@ -65,10 +77,14 @@ def iou(caja_a, caja_b) -> float:
 
 
 def emparejar(reales, detecciones, umbral_iou: float):
-    """Asigna cada deteccion a una caja real, de mayor a menor confianza.
+    """Decide qué detecciones acertaron y cuáles son falsas alarmas.
 
-    Devuelve (indices de reales encontradas, indices de detecciones correctas).
-    Es el mismo criterio del mAP: una caja real solo puede emparejarse una vez.
+    Se revisan las detecciones empezando por aquellas en las que el modelo
+    confía más, y cada una se asigna a la persona con la que más coincide. Una
+    persona ya emparejada no puede volver a usarse: si el modelo dibuja tres
+    cajas sobre la misma persona, una cuenta como acierto y las otras dos como
+    falsas alarmas. Es el mismo criterio con el que se califica oficialmente a
+    los detectores.
     """
     reales_encontradas, detecciones_correctas = set(), set()
     orden = sorted(range(len(detecciones)), key=lambda i: detecciones[i][4], reverse=True)
@@ -124,10 +140,13 @@ def dibujar(ruta_imagen: Path, reales, detecciones, encontradas, correctas, etiq
 
 
 def elegir(casos: list[dict], cuantos: int, con_fallos: bool) -> list[dict]:
-    """Elige ejemplos repartidos entre grupos de altitud.
+    """Escoge los ejemplos que se van a guardar como figura.
 
-    con_fallos=False busca imagenes perfectas (todo detectado, nada falso) y
-    con_fallos=True las que mas errores tienen, para no mostrar solo aciertos.
+    Busca casos de distintas alturas de vuelo, para que las figuras no sean
+    todas del mismo tipo de foto. Pidiendo con_fallos=False devuelve ejemplos
+    donde el modelo acertó del todo; con con_fallos=True devuelve los que más
+    se equivocó, que son los que hay que mostrar para no dar una impresión
+    falsa de lo bien que funciona.
     """
     if con_fallos:
         candidatos = [c for c in casos if c["perdidas"] > 0 or c["falsas"] > 0]

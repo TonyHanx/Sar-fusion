@@ -1,9 +1,19 @@
-"""Lectura del dataset POP (termico) en formato COCO.
+"""
+pop.py (dentro de src/datos)
 
-Para que sirve: POP trae un .json por particion con las cajas de las personas.
-Aqui estan las funciones que varios scripts necesitan: localizar los archivos,
-leer las anotaciones, sacar la escena y la altitud del nombre de la imagen y
-convertir una mascara de COCO en una imagen binaria (cuando la haya).
+¿Para qué sirve?
+    Es la caja de herramientas para leer el dataset POP. Varios scripts
+    necesitan hacer lo mismo: encontrar los archivos, leer las marcas de las
+    personas y averiguar a qué altura voló el dron en cada foto. En vez de
+    repetir ese código en cada uno, está escrito una sola vez aquí.
+
+    Un detalle útil del dataset: el nombre de cada foto guarda información.
+    "F10_0000_30.145.JPG" quiere decir lugar F10, foto número 0, tomada a
+    30.145 metros de altura. De ahí sacamos la altura sin necesidad de ningún
+    archivo extra.
+
+¿Quién lo usa?
+    pop_explorar.py, pop_preparar.py, pop_predicciones.py y eval_estratos.py.
 """
 
 from __future__ import annotations

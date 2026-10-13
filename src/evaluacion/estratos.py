@@ -1,10 +1,22 @@
-"""Evaluacion de detecciones con pycocotools, global y por estrato.
+"""
+estratos.py (dentro de src/evaluacion)
 
-Para que sirve: medir el desempeno no solo en promedio, sino separado por
-condiciones (altitud de vuelo y, cuando se pueda, nivel de oclusion). Esa
-separacion es el corazon de la tesis.
+¿Para qué sirve?
+    Es la parte que califica al detector. Compara lo que el modelo creyó ver
+    con lo que de verdad había en cada foto y saca tres números: la nota
+    general (mAP), qué parte de lo que marcó eran personas de verdad
+    (precisión) y qué parte de las personas logró encontrar (recall).
 
-Dos tecnicas, segun de que tipo sea el estrato:
+    Lo importante es que sabe calificar por separado según la condición de cada
+    foto, que es lo que la tesis necesita comparar.
+
+¿Por qué no se usa simplemente la nota que da el programa de entrenamiento?
+    Porque ese programa solo entrega el promedio de todo. Para separar por
+    altura de vuelo o por cuánto tapa la vegetación hay que calificar nosotros,
+    usando pycocotools, que es la herramienta oficial con la que se miden los
+    detectores en la literatura.
+
+Dos técnicas, según de qué tipo sea el grupo que se quiere medir:
 
 - **Estrato de imagen** (la altitud): todas las personas de una imagen comparten
   la altitud, asi que el estrato se evalua restringiendo la evaluacion a esas

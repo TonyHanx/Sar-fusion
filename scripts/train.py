@@ -1,18 +1,32 @@
-"""Entrena un detector con Ultralytics a partir de un archivo de configuracion.
+"""
+train.py
 
-Para que sirve: tener una sola puerta de entrada al entrenamiento. Todo lo que
-cambia entre experimentos (modelo, datos, epocas, lote, resolucion, semilla)
-vive en un archivo de configs/, y cada corrida queda anotada en la bitacora.
+¿Para qué sirve?
+    Entrenar al detector, que es el paso donde el programa aprende a encontrar
+    personas mirando miles de fotos ya marcadas. Este script existe para que
+    haya una sola puerta de entrada: nada se escribe a mano en el momento de
+    correrlo. Todo lo que cambia entre un experimento y otro está escrito en un
+    archivo de la carpeta configs/, así que ese archivo queda como la
+    descripción exacta de lo que se hizo.
 
-Que tecnica usa: Ultralytics recibe los parametros del bloque "ultralytics" del
-archivo tal cual, sin traducirlos, para que el archivo sea la descripcion exacta
-de lo que se ejecuto. Las metricas que van a la bitacora NO se inventan ni se
-leen de la pantalla: salen del results.csv que Ultralytics escribe en la carpeta
-de la corrida.
+¿Qué recibe?
+    Un archivo de configuración de configs/, que dice qué detector usar, con
+    qué fotos, cuántas vueltas dar y con qué ajustes.
 
-Uso:
+¿Qué produce?
+    - runs/: el modelo entrenado, las curvas de aprendizaje y las estadísticas
+      de la corrida.
+    - Una fila nueva en experiments/bitacora.csv con la fecha, la máquina, la
+      configuración usada y los resultados. Es el cuaderno de laboratorio del
+      proyecto.
+
+¿Cómo se usa?
     python scripts/train.py --config configs/exp1_pop_termico_prueba.yaml
     python scripts/train.py --config configs/exp1_pop_termico.yaml
+
+Una regla del proyecto: los números de la bitácora no se copian de la pantalla.
+Se leen del archivo de resultados que escribe el propio programa de
+entrenamiento, para que nadie pueda transcribirlos mal.
 """
 
 from __future__ import annotations
@@ -29,11 +43,12 @@ import yaml
 RAIZ_REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RAIZ_REPO))
 
-# Claves del bloque "ultralytics" que son rutas y hay que volver absolutas,
-# porque Ultralytics las resuelve contra su propia carpeta de trabajo.
+# Estos dos ajustes del archivo de configuracion son rutas de carpetas. Hay que
+# escribirlas completas antes de pasarlas, porque el programa de entrenamiento
+# las busca a partir de su propia carpeta y no de la del proyecto.
 CLAVES_DE_RUTA = ("data", "project")
 
-# Columnas de la bitacora, en el orden acordado en CLAUDE.md.
+# Columnas de la bitacora, en el orden acordado para el proyecto.
 COLUMNAS_BITACORA = [
     "fecha",
     "maquina",
@@ -65,11 +80,16 @@ def ruta_relativa(ruta: Path) -> str:
 
 
 def leer_metricas(carpeta_corrida: Path) -> dict:
-    """Lee la ultima fila de results.csv y saca mAP@0.5, precision y recall.
+    """Saca los resultados finales del archivo que escribe el entrenamiento.
 
-    Ultralytics nombra las columnas con sufijos que cambian entre versiones
-    (por ejemplo "metrics/mAP50(B)"), asi que se buscan por el trozo de nombre
-    en lugar de por el nombre exacto.
+    El programa de entrenamiento va anotando en un archivo cómo le fue en cada
+    vuelta. Aquí se lee la última línea, que es el resultado final, y se toman
+    tres números: la nota general del detector (mAP), qué parte de lo que marcó
+    eran personas de verdad (precisión) y qué parte de las personas encontró
+    (recall).
+
+    Los nombres de las columnas cambian de una versión a otra del programa, así
+    que se buscan por un trozo del nombre en lugar de por el nombre exacto.
     """
     archivo = carpeta_corrida / "results.csv"
     if not archivo.exists():
@@ -129,14 +149,17 @@ def main() -> int:
           f"imgsz: {parametros.get('imgsz')} | fraccion: {parametros.get('fraction', 1.0)}")
     print()
 
-    # Se importa aqui para que --help no tenga que cargar PyTorch.
+    # El programa de entrenamiento se carga aqui y no al inicio del archivo
+    # porque tarda varios segundos en arrancar. Asi, pedir la ayuda del script
+    # con --help responde al instante.
     from ultralytics import YOLO
 
     modelo = YOLO(config["modelo"])
     modelo.train(**parametros)
 
-    # La carpeta real de la corrida la decide Ultralytics (puede anadir sufijos
-    # si el nombre ya existia), asi que se pregunta al entrenador.
+    # La carpeta donde quedaron los resultados la elige el programa de
+    # entrenamiento, y le agrega un numero si ya existia una con ese nombre.
+    # Por eso se le pregunta a el en vez de suponerla.
     carpeta = Path(modelo.trainer.save_dir)
     metricas = leer_metricas(carpeta)
 

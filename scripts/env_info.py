@@ -1,11 +1,24 @@
-"""Informe del entorno de cómputo.
+"""
+env_info.py
 
-Para qué sirve: la tesis debe reportar en qué máquina se corrió cada
-experimento (sistema operativo, versiones de Python / PyTorch / CUDA /
-Ultralytics y modelo de GPU). Este script imprime esos datos y, con la
-opción --salida, los guarda en un archivo de texto.
+¿Para qué sirve?
+    Deja constancia de en qué computadora se hizo cada experimento. Un mismo
+    programa puede dar resultados distintos en máquinas distintas, así que el
+    artículo tiene que decir con qué equipo y con qué versiones se trabajó.
+    Este script reúne esos datos en una sola hoja.
 
-Uso:
+¿Qué recibe?
+    Nada. Le pregunta a la propia computadora.
+
+¿Qué produce?
+    - Un informe en pantalla: sistema operativo, versión de Python, de los
+      programas de inteligencia artificial que usamos, y el modelo de tarjeta
+      gráfica.
+    - El mismo informe en un archivo de texto, si se le indica con --salida.
+    - Además avisa si la tarjeta gráfica NO está disponible, que es el error
+      más común al instalar todo en una máquina nueva.
+
+¿Cómo se usa?
     python scripts/env_info.py
     python scripts/env_info.py --salida reports/entorno.txt
 """
@@ -21,9 +34,9 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-# Librerías cuya versión se reporta en la tabla del entorno.
-# Cada par es (modulo que se importa, nombre del paquete en pip), porque no
-# siempre coinciden: "cv2" lo instala "opencv-python" y "yaml" lo instala "PyYAML".
+# Programas de los que reportamos la versión en la tabla del artículo.
+# Cada par es (nombre con el que se importa, nombre con el que se instala),
+# porque a veces no coinciden: "cv2" se instala como "opencv-python".
 LIBRERIAS_EXTRA = [
     ("numpy", "numpy"),
     ("cv2", "opencv-python"),
@@ -37,14 +50,15 @@ LIBRERIAS_EXTRA = [
 
 
 def version_de(nombre_modulo: str, nombre_paquete: str | None = None) -> str:
-    """Devuelve la versión de una librería instalada, o 'no instalado'.
+    """Averigua qué versión de un programa está instalada.
 
-    Se consulta primero al instalador (pip), que conoce la versión exacta de
-    todos los paquetes; algunos, como pycocotools, no la exponen en el módulo.
+    Primero se le pregunta al instalador, que siempre conoce la versión exacta.
+    Algunos programas, como pycocotools, no la dicen por sí mismos, y entonces
+    se recurre al propio módulo como segunda opción.
     """
     try:
         modulo = importlib.import_module(nombre_modulo)
-    except Exception:  # noqa: BLE001 - si falla la importación, solo se informa
+    except Exception:  # noqa: BLE001 - si no se puede importar, solo se informa
         return "no instalado"
     try:
         return metadata.version(nombre_paquete or nombre_modulo)
@@ -53,7 +67,7 @@ def version_de(nombre_modulo: str, nombre_paquete: str | None = None) -> str:
 
 
 def bloque_sistema() -> list[str]:
-    """Sistema operativo, máquina y Python."""
+    """Datos de la computadora: qué sistema tiene y qué versión de Python usa."""
     return [
         "== Sistema ==",
         f"Fecha              : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
@@ -69,7 +83,13 @@ def bloque_sistema() -> list[str]:
 
 
 def bloque_pytorch() -> list[str]:
-    """PyTorch, CUDA y GPU detectadas."""
+    """Datos de la tarjeta gráfica y del programa que la maneja.
+
+    PyTorch es el programa que hace los cálculos del entrenamiento, y CUDA es
+    la pieza que le permite usar la tarjeta gráfica en lugar del procesador.
+    Sin esa pieza todo funciona igual, pero cien veces más lento, así que
+    conviene comprobarlo antes de empezar.
+    """
     lineas = ["", "== PyTorch y CUDA =="]
     try:
         import torch
@@ -92,6 +112,8 @@ def bloque_pytorch() -> list[str]:
         )
         return lineas
 
+    # Datos de cada tarjeta encontrada. La memoria es el limite real del
+    # proyecto: decide cuantas imagenes se pueden procesar a la vez.
     lineas += ["", "== GPU =="]
     lineas.append(f"GPUs detectadas    : {torch.cuda.device_count()}")
     for indice in range(torch.cuda.device_count()):
@@ -106,7 +128,7 @@ def bloque_pytorch() -> list[str]:
 
 
 def bloque_librerias() -> list[str]:
-    """Ultralytics y el resto de librerías del proyecto."""
+    """Versiones de los programas que usa el proyecto."""
     lineas = ["", "== Librerias =="]
     lineas.append(f"{'ultralytics':<18} : {version_de('ultralytics')}")
     for nombre_modulo, nombre_paquete in LIBRERIAS_EXTRA:
@@ -127,13 +149,16 @@ def main() -> int:
     informe = "\n".join(bloque_sistema() + bloque_pytorch() + bloque_librerias())
     print(informe)
 
+    # Si se pidio un archivo, se guarda ahi el mismo texto que se mostro.
     if argumentos.salida is not None:
         ruta = argumentos.salida
         ruta.parent.mkdir(parents=True, exist_ok=True)
         ruta.write_text(informe + "\n", encoding="utf-8")
         print(f"\nInforme guardado en: {ruta.resolve()}")
 
-    # Codigo de salida 1 si no hay GPU, para notarlo en los scripts del laboratorio.
+    # El script termina con un aviso de error cuando no hay tarjeta grafica.
+    # Asi, en el laboratorio, otro programa puede detenerse en vez de empezar
+    # un entrenamiento de horas que iria por el camino lento.
     try:
         import torch
 

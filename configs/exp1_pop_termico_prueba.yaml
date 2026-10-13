@@ -1,34 +1,43 @@
-# Prueba corta en la PC personal (RTX 3050 de 6 GB): solo comprueba que el
-# flujo completo corre de principio a fin. No produce resultados para el articulo.
-# Diferencias con la corrida completa: 10% de los datos, 1 epoca y lote 4.
+# Prueba corta en la PC personal (tarjeta grafica RTX 3050 de 6 GB).
+#
+# Para que sirve: comprobar que todo el flujo funciona antes de ocupar el
+# laboratorio durante horas. No produce resultados para el articulo.
+#
+# Diferencias con la corrida completa: usa el 10% de las imagenes y 5 vueltas
+# (epocas) en vez de 100. Esta es exactamente la configuracion que genero las
+# figuras del README.
+#
+# Por que 5 epocas y no 1: Ultralytics empieza aprendiendo muy despacio a
+# proposito (lo llama "calentamiento") y nunca baja de 100 pasos. Con una sola
+# epoca, que son 139 pasos, el modelo casi no alcanza a cambiar y la prueba no
+# demuestra nada. Con 5 si se ve bajar el error.
 
 experimento: exp1_pop_termico_prueba
-descripcion: Prueba de humo del flujo de entrenamiento en la PC.
+descripcion: Prueba del flujo de entrenamiento en la PC, con pocos datos y pocas vueltas.
 modelo: yolov8s.pt
 bitacora: experiments/bitacora.csv
 notas: prueba corta en la PC, no reportable
 
+# Todo lo de aqui se le pasa tal cual al programa que entrena (Ultralytics).
 ultralytics:
   data: configs/pop.yaml
-  epochs: 1
-  batch: 4
-  fraction: 0.1         # 10% de las imagenes de entrenamiento
-  imgsz: 1280
-  optimizer: SGD
-  lr0: 0.001
-  # Ultralytics calienta la tasa de aprendizaje durante 3 epocas. Con 1 sola
-  # epoca, la corrida entera seria calentamiento y las perdidas no se moverian,
-  # asi que la prueba no demostraria nada. Se acorta el calentamiento SOLO aqui;
-  # la corrida completa del laboratorio conserva el valor por omision.
-  warmup_epochs: 0.5
-  seed: 0
+  epochs: 5             # cinco vueltas completas a las imagenes de entrenamiento
+  batch: 4              # cuantas imagenes mira a la vez; 4 es lo que entra en 6 GB
+  fraction: 0.1         # solo el 10% de las imagenes, para que tarde minutos
+  imgsz: 1280           # tamano al que se procesa cada imagen
+  optimizer: SGD        # escrito a proposito: con "auto" el programa ignora lr0
+  lr0: 0.001            # velocidad de aprendizaje acordada para el proyecto
+  warmup_epochs: 1      # el arranque lento ocupa la primera vuelta, no las cinco
+  seed: 0               # fija el azar: repetir la corrida da el mismo resultado
   deterministic: true
   project: runs/pop
-  name: exp1_prueba
-  device: 0
+  name: exp1_prueba_aprendizaje
+  device: 0             # 0 = la tarjeta grafica
   workers: 2
-  val: true
-  plots: true
+  val: true             # al final de cada vuelta, se mide con las imagenes de validacion
+  plots: true           # guarda las curvas de entrenamiento como imagen
+  # Aumento de datos: se le muestran las mismas fotos volteadas, pegadas en
+  # mosaico y a distinta escala, para que el modelo no memorice.
   fliplr: 0.5
   mosaic: 1.0
   scale: 0.5

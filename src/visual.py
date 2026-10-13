@@ -1,9 +1,12 @@
-"""Dibujo de cajas y texto sobre las imagenes, para las figuras del articulo.
+"""
+visual.py (dentro de src)
 
-Para que sirve: las imagenes de POP son termicas en escala de grises, asi que
-el texto blanco o negro se pierde segun la zona. Aqui esta el dibujo comun que
-usan los scripts de inspeccion y de predicciones, para que todas las figuras se
-vean igual.
+¿Para qué sirve?
+    Dibuja los rectángulos y los textos que aparecen sobre las figuras. Está
+    aparte por una razón práctica: las fotos térmicas son grises y cambian
+    mucho de brillo, así que un texto blanco se pierde sobre el cielo y uno
+    negro sobre la sombra. Por eso todos los textos se escriben sobre una
+    banda oscura, y todas las figuras del proyecto salen con el mismo aspecto.
 """
 
 from __future__ import annotations

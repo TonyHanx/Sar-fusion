@@ -1,29 +1,36 @@
-# Experimento 1: YOLOv8s termico en POP (corrida completa, laboratorio).
-# Reproduce el resultado publicado por Z. Song et al. (2025): mAP@0.5 = 0.87.
+# Experimento 1: el detector YOLOv8s entrenado con las imagenes termicas de POP.
+#
+# Para que sirve: es la corrida que se reporta en el articulo. Busca repetir el
+# resultado que publicaron los autores del dataset (una nota de 0.87 sobre 1).
+# Si lo logramos, significa que nuestro flujo de trabajo es correcto y podemos
+# confiar en el para los experimentos de fusion que vienen despues.
+#
+# Esta corrida se hace en el laboratorio: en la PC personal tardaria dias.
 
 experimento: exp1_pop_termico
-descripcion: YOLOv8s con pesos COCO sobre POP termico, particiones oficiales.
-modelo: yolov8s.pt
+descripcion: YOLOv8s sobre las imagenes termicas de POP, con las particiones oficiales.
+modelo: yolov8s.pt      # detector pequeno, ya entrenado antes con fotos comunes
 bitacora: experiments/bitacora.csv
 notas: corrida completa para el articulo
 
-# Todo lo de aqui se le pasa tal cual a Ultralytics.
+# Todo lo de aqui se le pasa tal cual al programa que entrena (Ultralytics).
 ultralytics:
   data: configs/pop.yaml
-  epochs: 100
-  batch: 16
-  imgsz: 1280
-  optimizer: SGD        # explicito: con "auto" Ultralytics ignora lr0
-  lr0: 0.001
-  seed: 0
+  epochs: 100           # cien vueltas completas a las imagenes de entrenamiento
+  batch: 16             # cuantas imagenes mira a la vez
+  imgsz: 1280           # tamano al que se procesa cada imagen
+  optimizer: SGD        # escrito a proposito: con "auto" el programa ignora lr0
+  lr0: 0.001            # velocidad de aprendizaje acordada para el proyecto
+  seed: 0               # fija el azar: repetir la corrida da el mismo resultado
   deterministic: true
   project: runs/pop
   name: exp1_pop_termico
-  device: 0
+  device: 0             # 0 = la tarjeta grafica
   workers: 8
-  val: true
-  plots: true
-  # Aumento de datos acordado: volteo, mosaico y cambio de escala.
+  val: true             # al final de cada vuelta, se mide con las imagenes de validacion
+  plots: true           # guarda las curvas de entrenamiento como imagen
+  # Aumento de datos: se le muestran las mismas fotos volteadas, pegadas en
+  # mosaico y a distinta escala, para que el modelo no memorice.
   fliplr: 0.5
   mosaic: 1.0
   scale: 0.5

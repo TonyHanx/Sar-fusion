@@ -1,23 +1,31 @@
-"""Evalua un modelo entrenado sobre una particion, global y por estrato.
+"""
+eval_estratos.py
 
-Para que sirve: el numero global esconde lo que de verdad interesa. Este script
-separa el desempeno por altitud de vuelo y por nivel de oclusion, que es la
-comparacion que sostiene la tesis.
+¿Para qué sirve?
+    Tomar la nota del detector, pero separada por condiciones. Un solo número
+    para todo el dataset esconde lo que de verdad importa: no es lo mismo
+    encontrar a una persona con el dron a 30 metros que a 70, ni con el cuerpo
+    despejado que medio tapado por un árbol. Esa comparación es justamente la
+    pregunta de la tesis, así que aquí se mide por separado.
 
-Que hace:
-  1. Corre el modelo sobre la particion elegida y guarda las predicciones en
-     formato COCO (quedan en runs/, para poder re-evaluar sin volver a inferir).
-  2. Calcula con pycocotools el mAP@0.5, y aparte la precision y el recall al
-     umbral de confianza fijado (0.5).
-  3. Repite el calculo por cada estrato y lo guarda todo en un CSV.
-  4. Anota la evaluacion en la bitacora.
+¿Qué recibe?
+    Un modelo ya entrenado y el grupo de fotos del examen final (las que el
+    modelo nunca vio durante el entrenamiento).
 
-Nota: la oclusion depende de personas.csv. POP no publica mascaras, asi que esa
-columna esta vacia y el script lo informa en vez de inventar estratos.
+¿Qué produce?
+    - runs/eval/: todo lo que el modelo detectó, guardado en un archivo. Así se
+      puede volver a calcular cualquier medida sin repetir el trabajo pesado.
+    - reports/exp1_resultados.csv: una fila con los resultados generales y una
+      fila por cada altura de vuelo.
+    - Una fila nueva en la bitácora del proyecto.
 
-Uso:
+¿Cómo se usa?
     python scripts/eval_estratos.py
     python scripts/eval_estratos.py --config configs/eval_estratos.yaml
+
+Sobre la oclusión: el script también sabe medir por cuánto tapa la vegetación a
+cada persona, pero ese dato no viene en POP. Cuando falta, avisa en pantalla en
+lugar de inventar los grupos.
 """
 
 from __future__ import annotations
@@ -65,18 +73,19 @@ def ruta_relativa(ruta: Path) -> str:
 
 
 def predecir(modelo, datos: dict, carpeta_imagenes: Path, config: dict) -> list[dict]:
-    """Corre el modelo y devuelve las detecciones en formato COCO.
+    """Le muestra al modelo cada foto y anota todo lo que cree ver.
 
-    Se usa una confianza minima muy baja a proposito: el mAP necesita la curva
-    completa de precision y recall. El umbral de 0.5 se aplica despues, solo
-    para la precision y el recall que se reportan.
+    Se le pide que reporte incluso las cajas en las que apenas confía. Parece
+    raro, pero la nota general del detector se calcula justamente recorriendo
+    todos los niveles de confianza, de los más dudosos a los más seguros. El
+    corte en 0.5 se aplica más adelante, solo para la precisión y el recall.
     """
     por_nombre = {registro["file_name"]: id_imagen for id_imagen, registro in datos["imagenes"].items()}
     rutas = [str(carpeta_imagenes / nombre) for nombre in por_nombre]
 
-    # Las rutas se procesan por grupos pequenos. Si se le pasa la lista completa,
-    # Ultralytics la toma como un unico lote y a 1280 px eso son mas de 13 GB:
-    # no entra en una GPU de 6 GB.
+    # Las fotos se procesan de a pocas. Si se le entrega la lista completa, el
+    # programa intenta cargar las 900 de golpe en la tarjeta grafica: son mas
+    # de 13 GB y la tarjeta de esta PC tiene 6.
     lote = int(config["lote"])
     detecciones = []
     for inicio in range(0, len(rutas), lote):
@@ -209,8 +218,10 @@ def main() -> int:
     print("=== resultados ===")
     agregar("global", "todas", estratos.evaluar(gt_completo, detecciones, confianza, umbral_iou))
 
-    # 2) Por altitud: la altitud es propia de la imagen, asi que el estrato se
-    #    arma restringiendo la evaluacion a las imagenes de ese grupo.
+    # 2) Por altura de vuelo. Todas las personas de una foto fueron vistas
+    #    desde la misma altura, asi que basta con medir usando solo las fotos
+    #    de ese grupo. Si se dejaran las demas, sus falsas alarmas contarian
+    #    igual y el resultado no diria nada sobre esa altura.
     grupos: dict[str, list[int]] = {}
     for registro in registros:
         grupo = pop.grupo_altitud(pop.altitud_desde_nombre(registro["file_name"]))
@@ -221,8 +232,10 @@ def main() -> int:
             estratos.evaluar(gt_completo, detecciones, confianza, umbral_iou, grupos[nombre]),
         )
 
-    # 3) Por oclusion: es propia de cada persona, asi que se evalua sobre todas
-    #    las imagenes marcando como iscrowd=1 a las personas de otros estratos.
+    # 3) Por cuanto tapa la vegetacion. Aqui el caso es distinto: en una misma
+    #    foto puede haber una persona despejada y otra casi escondida. Se usan
+    #    todas las fotos, pero las personas de los otros grupos se marcan como
+    #    "zona a ignorar": no cuentan ni como acierto ni como error.
     por_oclusion = estratos_de_oclusion(resolver(config["tabla_personas"]), particion)
     if not por_oclusion:
         print("\n  AVISO: no hay estratos de oclusion en personas.csv.")
@@ -234,10 +247,10 @@ def main() -> int:
             gt = estratos.construir_gt(registros, anotaciones, todos_los_ids - ids_del_estrato)
             agregar("oclusion", nombre, estratos.evaluar(gt, detecciones, confianza, umbral_iou))
 
-    # 4) Control: el mAP@0.5 que calcula Ultralytics por su cuenta. Sirve para
-    #    dos cosas: compararlo con el 0.87 publicado y comprobar que nuestro
-    #    calculo con pycocotools no se desvia (son implementaciones distintas,
-    #    asi que una diferencia de pocas centesimas es normal).
+    # 4) Control de calidad. Se le pide al programa de entrenamiento que mida
+    #    el mismo modelo por su cuenta, con su propio codigo. Si su nota y la
+    #    nuestra coinciden, es senal de que nuestra forma de medir es correcta.
+    #    Son dos programas distintos, asi que una diferencia minima es normal.
     if config.get("control_ultralytics", True):
         print("\n=== control: evaluacion propia de Ultralytics ===")
         metricas = modelo.val(
