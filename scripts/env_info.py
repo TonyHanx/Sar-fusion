@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import importlib
+import importlib.metadata as metadata
 import platform
 import socket
 import sys
@@ -21,16 +22,34 @@ from datetime import datetime
 from pathlib import Path
 
 # Librerías cuya versión se reporta en la tabla del entorno.
-LIBRERIAS_EXTRA = ["numpy", "cv2", "pandas", "scipy", "matplotlib", "yaml", "thop", "pycocotools"]
+# Cada par es (modulo que se importa, nombre del paquete en pip), porque no
+# siempre coinciden: "cv2" lo instala "opencv-python" y "yaml" lo instala "PyYAML".
+LIBRERIAS_EXTRA = [
+    ("numpy", "numpy"),
+    ("cv2", "opencv-python"),
+    ("pandas", "pandas"),
+    ("scipy", "scipy"),
+    ("matplotlib", "matplotlib"),
+    ("yaml", "PyYAML"),
+    ("thop", "thop"),
+    ("pycocotools", "pycocotools"),
+]
 
 
-def version_de(nombre_modulo: str) -> str:
-    """Devuelve la versión de una librería instalada, o 'no instalado'."""
+def version_de(nombre_modulo: str, nombre_paquete: str | None = None) -> str:
+    """Devuelve la versión de una librería instalada, o 'no instalado'.
+
+    Se consulta primero al instalador (pip), que conoce la versión exacta de
+    todos los paquetes; algunos, como pycocotools, no la exponen en el módulo.
+    """
     try:
         modulo = importlib.import_module(nombre_modulo)
     except Exception:  # noqa: BLE001 - si falla la importación, solo se informa
         return "no instalado"
-    return str(getattr(modulo, "__version__", "version desconocida"))
+    try:
+        return metadata.version(nombre_paquete or nombre_modulo)
+    except metadata.PackageNotFoundError:
+        return str(getattr(modulo, "__version__", "version desconocida"))
 
 
 def bloque_sistema() -> list[str]:
@@ -90,8 +109,8 @@ def bloque_librerias() -> list[str]:
     """Ultralytics y el resto de librerías del proyecto."""
     lineas = ["", "== Librerias =="]
     lineas.append(f"{'ultralytics':<18} : {version_de('ultralytics')}")
-    for nombre in LIBRERIAS_EXTRA:
-        lineas.append(f"{nombre:<18} : {version_de(nombre)}")
+    for nombre_modulo, nombre_paquete in LIBRERIAS_EXTRA:
+        lineas.append(f"{nombre_modulo:<18} : {version_de(nombre_modulo, nombre_paquete)}")
     return lineas
 
 
