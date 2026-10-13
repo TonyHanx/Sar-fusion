@@ -1,0 +1,14 @@
+# Dataset POP en formato YOLO.
+# ARCHIVO GENERADO por scripts/pop_preparar.py: no editar a mano,
+# se vuelve a escribir cada vez que se preparan los datos.
+# 'path' es absoluto porque Ultralytics resuelve las rutas relativas
+# contra su propia carpeta de datasets, no contra este repositorio.
+# Al preparar los datos en el laboratorio, el archivo se regenera con
+# la ruta de esa maquina.
+path: C:/Users/User/Desktop/sar-fusion/data/processed/pop
+train: images/train
+val: images/val
+test: images/test
+
+names:
+  0: person

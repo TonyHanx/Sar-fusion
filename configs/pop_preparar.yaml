@@ -1,0 +1,22 @@
+# Configuracion de scripts/pop_preparar.py (Fase 2: POP en formato YOLO).
+# Las rutas son relativas a la raiz del repositorio.
+
+raiz_pop: data/raw/pop/POP
+particiones: [train, val, test]
+
+# Salidas.
+salida: data/processed/pop               # imagenes y etiquetas en formato YOLO
+tabla_personas: data/processed/pop/personas.csv
+tabla_resumen: reports/tabla9_pop.csv
+figura: reports/pop_distribuciones.png
+config_ultralytics: configs/pop.yaml     # se genera automaticamente
+
+# Como se llevan las imagenes a data/processed:
+#   "enlace" = enlace duro, no ocupa espacio extra y no modifica el original
+#   "copia"  = copia de verdad (usar si el destino esta en otro disco)
+modo_imagenes: enlace
+
+# Cajas con un lado menor a este numero de pixeles se descartan por degeneradas.
+lado_minimo_caja: 2
+
+semilla: 0

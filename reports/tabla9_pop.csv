@@ -1,0 +1,10 @@
+particion,grupo_altitud,imagenes,personas,estrato_oclusion
+test,30 m,102,102,sin dato (POP no publica mascaras)
+test,50 m,731,1604,sin dato (POP no publica mascaras)
+test,70 m,67,134,sin dato (POP no publica mascaras)
+train,30 m,1895,5295,sin dato (POP no publica mascaras)
+train,50 m,1842,6141,sin dato (POP no publica mascaras)
+train,70 m,1811,6989,sin dato (POP no publica mascaras)
+val,30 m,761,2101,sin dato (POP no publica mascaras)
+val,50 m,975,2816,sin dato (POP no publica mascaras)
+val,70 m,584,1628,sin dato (POP no publica mascaras)
